@@ -2,14 +2,16 @@ package org.aoc;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class Day02 {
 
     public BufferedReader fetchResource() {
-        return new BufferedReader(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("example.txt")));
+        return new BufferedReader(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("02.txt")));
     }
 
     public List<Pair> inputReader(BufferedReader reader) {
@@ -21,49 +23,35 @@ public class Day02 {
         return new Pair(splitted[0], splitted[1]);
     }
 
-    public record Pair(String left, String right) {}
+    public record Pair(String left, String right) {
+    }
 
-    private Optional<String> invalidId(String id, long range, boolean isRight) {
-        if (id.length() % 2 != 0) {
-            return Optional.empty();
+    private List<Long> invalidIds(Pair input) {
+        ArrayList<Long> result = new ArrayList<>();
+
+        long range = Long.parseLong(input.right()) - Long.parseLong(input.left());
+
+        // Ensure that the left side is at least one digit long
+        long toCopyLeft = Long.parseLong(input.left().substring(0, 1));
+        if (input.left().length() > 1) {
+            toCopyLeft = Long.parseLong(input.left().substring(0, input.left().length() / 2));
         }
-        String toCopy = id.substring(0, id.length() / 2);
-        String current = id.substring(id.length() / 2);
+        long toCopyRight = Long.parseLong(input.right().substring(0, (int) Math.ceil(input.right().length() / 2.0)));
 
-        if (isRight && Long.parseLong(current) >= Long.parseLong(toCopy) && Math.abs(Long.parseLong(toCopy+toCopy) - Long.parseLong(current)) <= range) {
-            return Optional.of(toCopy + toCopy);
+        while (toCopyLeft <= toCopyRight) {
+            long invalidId = Long.parseLong(toCopyLeft + String.valueOf(toCopyLeft));
+            if (invalidId >= Long.parseLong(input.left())) {
+                if (Long.parseLong(input.left()) + range >= invalidId) {
+                    result.add(invalidId);
+                }
+            }
+            toCopyLeft++;
         }
-
-        if (!isRight && Long.parseLong(current) <= Long.parseLong(toCopy) && Math.abs(Long.parseLong(toCopy+toCopy) - Long.parseLong(current)) <= range) {
-            return Optional.of(toCopy+toCopy);
-        }
-
-//
-//        if (isRight && Long.parseLong(current) < Long.parseLong(toCopy)) {
-//            return Optional.empty();
-//        }
-//        if (!isRight && Long.parseLong(current) > Long.parseLong(toCopy)) {
-//            return Optional.empty();
-//        }
-//
-//        if (!isRight && Long.parseLong(id) + range >= Long.parseLong(toCopy+toCopy)) {
-//            return Optional.of(toCopy+toCopy);
-//        }
-//        if (isRight && Long.parseLong(id) - range <= Long.parseLong(toCopy+toCopy)) {
-//            return Optional.of(toCopy+toCopy);
-//        }
-
-        return Optional.empty();
+        return result;
     }
 
     public long logicPartOne(List<Pair> pairs) {
-        return pairs.stream().flatMap(p -> {
-            long range = Long.parseLong(p.right()) - Long.parseLong(p.left());
-            return Stream.of(invalidId(p.left(), range, false), invalidId(p.right(), range, true)).distinct();
-        }).flatMap(Optional::stream)
-                .mapToLong(Long::parseLong)
-                .peek(System.out::println)
-                .sum();
+        return pairs.stream().map(this::invalidIds).peek(System.out::println).flatMap(List::stream).mapToLong(l -> l).sum();
     }
 
     public static void main(String[] args) {
