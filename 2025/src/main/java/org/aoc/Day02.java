@@ -69,12 +69,7 @@ public class Day02 {
     }
 
     public long logicPartTwo(List<Pair> pairs) {
-        return pairs.stream()
-                .flatMap(p -> p.allIds().stream())
-                .filter(this::invalidId)
-                .peek(System.out::println)
-                .mapToLong(Long::parseLong)
-                .sum();
+        return pairs.stream().flatMap(p -> p.allIds().stream()).filter(this::invalidId).peek(System.out::println).mapToLong(Long::parseLong).sum();
     }
 
     public boolean invalidId(String id) {
@@ -83,8 +78,7 @@ public class Day02 {
                 continue;
             }
             String[] splittedId = split(id, divider);
-            boolean allPartsEqual = Arrays.stream(splittedId)
-                    .allMatch(s -> s.equals(splittedId[0]));
+            boolean allPartsEqual = Arrays.stream(splittedId).allMatch(s -> s.equals(splittedId[0]));
 
             if (allPartsEqual) {
                 return true;
@@ -99,7 +93,7 @@ public class Day02 {
         StringBuilder builder = new StringBuilder(id.length() / parts);
         for (int i = 0; i < id.length(); i += parts) {
             for (int j = 0; j < parts; j++) {
-                builder.append(chars[i+j]);
+                builder.append(chars[i + j]);
             }
             result[i / parts] = builder.toString();
             builder.delete(0, builder.length());
@@ -109,9 +103,9 @@ public class Day02 {
 
     public static void main(String[] args) {
         Day02 day2 = new Day02();
-//        System.out.println("Part 1:");
-//        System.out.println(day2.logicPartOne(day2.inputReader(day2.fetchResource())));
-//        System.out.println("-----------------");
+        System.out.println("Part 1:");
+        System.out.println(day2.logicPartOne(day2.inputReader(day2.fetchResource())));
+        System.out.println("-----------------");
         System.out.println("Part 2:");
         System.out.println(day2.logicPartTwo(day2.inputReader(day2.fetchResource())));
     }
