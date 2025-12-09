@@ -4,14 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.SortedMap;
-import java.util.TreeSet;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 public class Day02 {
 
@@ -53,8 +46,10 @@ public class Day02 {
         long toCopyRight = Long.parseLong(input.right().substring(0, (int) Math.ceil(input.right().length() / 2.0)));
 
         while (toCopyLeft <= toCopyRight) {
+            // Only possible invalid id is the left side twice
             long invalidId = Long.parseLong(toCopyLeft + String.valueOf(toCopyLeft));
             if (invalidId >= Long.parseLong(input.left())) {
+                // Check if the invalid id is still in the range
                 if (Long.parseLong(input.left()) + range >= invalidId) {
                     result.add(invalidId);
                 }
