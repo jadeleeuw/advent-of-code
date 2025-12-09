@@ -14,29 +14,6 @@ public class Day03 {
         return reader.lines().toList();
     }
 
-    public int logicPartOne(List<String> batteryBanks) {
-        int totalJoltage = 0;
-        for (int i = 0; i < batteryBanks.size(); i++) {
-            String current = batteryBanks.get(i); // Get it? ;)
-            int indexLeftNumber = indexOfHighestDigit(current);
-            int indexRightNumber;
-
-            // Rightmost number, so the second-highest number is the left number
-            if (indexLeftNumber == current.length() - 1) {
-                indexRightNumber = indexLeftNumber;
-                indexLeftNumber = indexOfHighestDigit(current.substring(0, indexLeftNumber));
-            } else {
-                int relativeIndex = indexLeftNumber + 1;
-                indexRightNumber = relativeIndex + indexOfHighestDigit(current.substring(relativeIndex));
-            }
-
-            String joltage = current.charAt(indexLeftNumber) + String.valueOf(current.charAt(indexRightNumber));
-            System.out.println("%s -> %s".formatted(current, joltage));
-            totalJoltage += Integer.parseInt(joltage);
-        }
-        return totalJoltage;
-    }
-
     private int indexOfHighestDigit(String batteryBank) {
         char[] characters = batteryBank.toCharArray();
 
@@ -53,12 +30,31 @@ public class Day03 {
         return highestIndex;
     }
 
+    public long totalJoltage(List<String> batteryBanks, int numberOfBatteries) {
+        long totalJoltage = 0;
+        for (int i = 0; i < batteryBanks.size(); i++) {
+            String current = batteryBanks.get(i);
+            StringBuilder batteryBuilder = new StringBuilder();
+
+            for (int j = numberOfBatteries - 1; j >= 0; j--) {
+                int index = indexOfHighestDigit(current.substring(0, current.length() - j));
+                batteryBuilder.append(current.charAt(index));
+                current = current.substring(index + 1);
+            }
+
+            String joltage = batteryBuilder.toString();
+            System.out.println("%s -> %s".formatted(batteryBanks.get(i), joltage));
+            totalJoltage += Long.parseLong(joltage);
+        }
+        return totalJoltage;
+    }
+
     public static void main(String[] args) {
         Day03 day3 = new Day03();
         System.out.println("Part 1:");
-        System.out.println(day3.logicPartOne(day3.inputReader(day3.fetchResource())));
-//        System.out.println("-----------------");
-//        System.out.println("Part 2:");
-//        System.out.println(day2.logicPartTwo(day2.inputReader(day2.fetchResource())));
+        System.out.println(day3.totalJoltage(day3.inputReader(day3.fetchResource()), 2));
+        System.out.println("-----------------");
+        System.out.println("Part 2:");
+        System.out.println(day3.totalJoltage(day3.inputReader(day3.fetchResource()), 12));
     }
 }
