@@ -23,44 +23,33 @@ public class Day04 {
     public record Coordinate(int x, int y) {
     }
 
-    public long rollsAccessibleByForklift(List<String> map) {
-        ArrayList<Coordinate> adjacentToRolls = new ArrayList<>();
+    public List<Coordinate> rollsAccessibleByForklift(List<String> map) {
+        Map<Coordinate, Integer> adjacentToRolls = new HashMap<>();
+
         for (int y = 0; y < map.size(); y++) {
             char[] row = map.get(y).toCharArray();
             for (int x = 0; x < row.length; x++) {
                 if (row[x] == '@') {
-                    adjacentToRolls.addAll(
-                            List.of(new Coordinate(x - 1, y - 1),
-                                    new Coordinate(x, y - 1),
-                                    new Coordinate(x + 1, y - 1),
-                                    new Coordinate(x - 1, y),
-                                    new Coordinate(x + 1, y),
-                                    new Coordinate(x - 1, y + 1),
-                                    new Coordinate(x, y + 1),
-                                    new Coordinate(x + 1, y + 1)));
+                    adjacentToRolls.putIfAbsent(new Coordinate(x, y), 0);
+                    List.of(new Coordinate(x - 1, y - 1),
+                            new Coordinate(x, y - 1),
+                            new Coordinate(x + 1, y - 1),
+                            new Coordinate(x - 1, y),
+                            new Coordinate(x + 1, y),
+                            new Coordinate(x - 1, y + 1),
+                            new Coordinate(x, y + 1),
+                            new Coordinate(x + 1, y + 1))
+                            .forEach(c -> {
+                                int value = adjacentToRolls.getOrDefault(c, 0);
+                                adjacentToRolls.put(c, value + 1);
+                    });
                 }
             }
         }
 
-        var a = adjacentToRolls.stream()
-                .filter(c -> validCoordinate(c, map.getFirst().length(), map.size()))
-                .collect(groupingBy(Function.identity()))
-                .entrySet().stream()
+        return adjacentToRolls.entrySet().stream().filter(e -> validCoordinate(e.getKey(), map.getFirst().length(), map.size()))
                 // all locations that have less than 4 adjacent forklifts
-                .filter(e -> e.getValue().size() < 4)
-                .map(Map.Entry::getKey)
-                .filter(c -> isRollOfPaper(c, map)).toList();
-        printMap(a, map);
-
-        return adjacentToRolls.stream()
-                .filter(c -> validCoordinate(c, map.getFirst().length(), map.size()))
-                .collect(groupingBy(Function.identity()))
-                .entrySet().stream()
-                // all locations that have less than 4 adjacent forklifts
-                .filter(e -> e.getValue().size() < 4)
-                .map(Map.Entry::getKey)
-                .filter(c -> isRollOfPaper(c, map))
-                .count();
+                .filter(e -> e.getValue() < 4).map(Map.Entry::getKey).filter(c -> isRollOfPaper(c, map)).count();
     }
 
     private boolean validCoordinate(Coordinate c, int xLength, int yLength) {
@@ -69,6 +58,10 @@ public class Day04 {
 
     private boolean isRollOfPaper(Coordinate c, List<String> map) {
         return map.get(c.y()).charAt(c.x()) == '@';
+    }
+
+    public long removeableRolls(List<String> map) {
+        rollsAccessibleByForklift()
     }
 
     private void printMap(List<Coordinate> coordinates, List<String> original) {
