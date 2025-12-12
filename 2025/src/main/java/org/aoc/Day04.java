@@ -112,6 +112,5 @@ public class Day04 {
         System.out.println("-----------------");
         System.out.println("Part 2:");
         System.out.println(day4.removeableRolls(day4.inputReader(day4.fetchResource())));
-
     }
 }
