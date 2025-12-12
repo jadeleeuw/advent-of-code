@@ -2,11 +2,13 @@ package org.aoc;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -23,7 +25,7 @@ public class Day04 {
     public record Coordinate(int x, int y) {
     }
 
-    public List<Coordinate> rollsAccessibleByForklift(List<String> map) {
+    public Stream<Coordinate> rollsAccessibleByForklift(List<String> map) {
         Map<Coordinate, Integer> adjacentToRolls = new HashMap<>();
 
         for (int y = 0; y < map.size(); y++) {
@@ -31,17 +33,17 @@ public class Day04 {
             for (int x = 0; x < row.length; x++) {
                 if (row[x] == '@') {
                     adjacentToRolls.putIfAbsent(new Coordinate(x, y), 0);
-                    List.of(new Coordinate(x - 1, y - 1),
+                    List.of(
+                            new Coordinate(x - 1, y - 1),
                             new Coordinate(x, y - 1),
                             new Coordinate(x + 1, y - 1),
                             new Coordinate(x - 1, y),
                             new Coordinate(x + 1, y),
                             new Coordinate(x - 1, y + 1),
                             new Coordinate(x, y + 1),
-                            new Coordinate(x + 1, y + 1))
-                            .forEach(c -> {
-                                int value = adjacentToRolls.getOrDefault(c, 0);
-                                adjacentToRolls.put(c, value + 1);
+                            new Coordinate(x + 1, y + 1)).forEach(c -> {
+                        int value = adjacentToRolls.getOrDefault(c, 0);
+                        adjacentToRolls.put(c, value + 1);
                     });
                 }
             }
@@ -49,7 +51,7 @@ public class Day04 {
 
         return adjacentToRolls.entrySet().stream().filter(e -> validCoordinate(e.getKey(), map.getFirst().length(), map.size()))
                 // all locations that have less than 4 adjacent forklifts
-                .filter(e -> e.getValue() < 4).map(Map.Entry::getKey).filter(c -> isRollOfPaper(c, map)).count();
+                .filter(e -> e.getValue() < 4).map(Map.Entry::getKey).filter(c -> isRollOfPaper(c, map));
     }
 
     private boolean validCoordinate(Coordinate c, int xLength, int yLength) {
@@ -60,8 +62,26 @@ public class Day04 {
         return map.get(c.y()).charAt(c.x()) == '@';
     }
 
+    private List<String> deleteRolls(List<Coordinate> toRemove, List<String> map) {
+        ArrayList<String> mapCopy = new ArrayList<>(map);
+        toRemove.forEach(c -> {
+            char[] chars = mapCopy.get(c.y()).toCharArray();
+            chars[c.x()] = '.';
+            mapCopy.set(c.y(), new String(chars));
+        });
+        return mapCopy;
+    }
+
     public long removeableRolls(List<String> map) {
-        rollsAccessibleByForklift()
+        List<String> currentIteration = map;
+        List<Coordinate> accessibleRolls = rollsAccessibleByForklift(map).toList();
+        long counter = accessibleRolls.size();
+        while (!accessibleRolls.isEmpty()) {
+            currentIteration = deleteRolls(accessibleRolls, currentIteration);
+            accessibleRolls = rollsAccessibleByForklift(currentIteration).toList();
+            counter += accessibleRolls.size();
+        }
+        return counter;
     }
 
     private void printMap(List<Coordinate> coordinates, List<String> original) {
@@ -88,9 +108,10 @@ public class Day04 {
     public static void main(String[] args) {
         Day04 day4 = new Day04();
         System.out.println("Part 1:");
-        System.out.println(day4.rollsAccessibleByForklift(day4.inputReader(day4.fetchResource())));
-//        System.out.println("-----------------");
-//        System.out.println("Part 2:");
-//        System.out.println(day3.totalJoltage(day3.inputReader(day3.fetchResource()), 12));
+        System.out.println(day4.rollsAccessibleByForklift(day4.inputReader(day4.fetchResource())).count());
+        System.out.println("-----------------");
+        System.out.println("Part 2:");
+        System.out.println(day4.removeableRolls(day4.inputReader(day4.fetchResource())));
+
     }
 }
