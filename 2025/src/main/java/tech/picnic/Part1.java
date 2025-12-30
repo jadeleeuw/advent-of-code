@@ -53,14 +53,30 @@ public class Part1 {
         }
     }
 
-    public record ToteStack(List<Tote> totes) {
-        public ToteStack {
-            assert !totes.isEmpty();
-            assert totes.size() < 4;
-        }
-    }
+    public record ToteStack(List<Tote> totes) {}
+
+    public record ToteBatch(List<Tote> batch) {}
 
     public record AllTotesProcessed(List<ToteStack> stacks) {}
+
+    public List<ToteBatch> createBatches(List<Tote> upcomingTotes) {
+        List<ToteBatch> batches = new ArrayList<>();
+        List<Tote> currentBatch = new ArrayList<>();
+        Tote previousTote = upcomingTotes.getFirst();
+        currentBatch.add(previousTote);
+
+        for (int i = 1; i < upcomingTotes.size(); i++) {
+            Tote currentTote = upcomingTotes.get(i);
+            // Tote cannot be stacked on top of the previous tote, so this needs to be a new batch
+            if (currentTote.tempZone().isColderThan(previousTote.tempZone()) || currentTote.weight() > previousTote.weight()) {
+                batches.add(new ToteBatch(List.copyOf(currentBatch)));
+            }
+            currentBatch.add(currentTote);
+            previousTote = currentTote;
+        }
+        batches.add(new ToteBatch(List.copyOf(currentBatch)));
+        return batches;
+    }
 
     public List<AllTotesProcessed> buildAllPossibilities(List<ToteStack> processedStacks, List<Tote> upcomingTotes) {
         if (upcomingTotes.isEmpty()) {
@@ -98,11 +114,19 @@ public class Part1 {
     }
 
     public long minimalCost(List<Tote> upcomingTotes) {
-        var a = buildAllPossibilities(new ArrayList<>(), upcomingTotes);
-        return buildAllPossibilities(new ArrayList<>(), upcomingTotes).stream()
-                .mapToLong(this::cost)
-                .min()
-                .orElseThrow(() -> new RuntimeException("Could not find any possible options of stacking the totes"));
+        long totalCost = 0;
+        // Batch the tote list to reduce the number of possible tote stack combinations
+        List<ToteBatch> batches = createBatches(upcomingTotes);
+        for (ToteBatch batch : batches) {
+            var a = buildAllPossibilities(new ArrayList<>(), batch.batch());
+            // Find all possible stack combinations, and use the lowest cost one
+            totalCost += a
+                    .stream()
+                    .mapToLong(this::cost)
+                    .min()
+                    .orElseThrow(() -> new RuntimeException("Could not find any possible options of stacking the totes"));
+        }
+        return totalCost;
     }
 
     public long cost(AllTotesProcessed processed) {
